@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
 
 from app.core.error_handler import http_exception_handler, unhandled_exception_handler
+from app.core.database import init_db
 
 # Routers
 from app.api.v1.ahj_api import AHJAPI
@@ -22,6 +23,11 @@ from app.admin.admin import setup_admin
 # Initialize FastAPI App
 # -----------------------------------
 app = FastAPI(title="AHJ Engine")
+
+
+@app.on_event("startup")
+def on_startup():
+    init_db()
 
 # -----------------------------------
 # Exception Handlers
