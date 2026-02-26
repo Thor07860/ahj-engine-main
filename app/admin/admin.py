@@ -72,7 +72,12 @@ class FormulaAdmin(ModelView, model=Formula):
 # -------------------------
 
 def setup_admin(app):
-    admin = Admin(app, engine)
+    admin = Admin(
+        app,
+        engine,
+        title="Admin",
+        logo_url="https://res.cloudinary.com/dikq4mtrh/image/upload/v1762442702/illumine_logo_lmi7yw.png",
+    )
 
     admin.add_view(StateAdmin)
     admin.add_view(AHJAdmin)
