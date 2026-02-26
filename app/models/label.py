@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from app.core.database import Base
 
 class Label(Base):
@@ -8,3 +8,4 @@ class Label(Base):
 
     label_name = Column(String(255), nullable=False)
     field_type = Column(String(100), nullable=False)
+    description = Column(Text)

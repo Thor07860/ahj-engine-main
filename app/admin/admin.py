@@ -23,6 +23,11 @@ class StateAdmin(ModelView, model=State):
 class AHJAdmin(ModelView, model=AHJ):
     column_list = [AHJ.id, AHJ.ahj_name]
 
+    class Media:
+        js = [
+            "https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js", "/static/tinymce_init.js",
+        ]
+
 
 class UtilityAdmin(ModelView, model=Utility):
     column_list = [Utility.id, Utility.utility_name]

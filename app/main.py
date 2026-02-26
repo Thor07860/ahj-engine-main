@@ -5,6 +5,7 @@ from fastapi.exceptions import HTTPException
 
 from app.core.error_handler import http_exception_handler, unhandled_exception_handler
 from app.core.database import init_db
+from fastapi.staticfiles import StaticFiles
 
 # Routers
 from app.api.v1.ahj_api import AHJAPI
@@ -17,12 +18,13 @@ from app.api.v1.auth_api import AuthAPI
 
 # SQLAdmin
 from app.admin.admin import setup_admin
-
-
+MAIN_APP_VERSION = "v1"
+API_VERSION = "1.0.0"
 # -----------------------------------
 # Initialize FastAPI App
 # -----------------------------------
 app = FastAPI(title="AHJ Engine")
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
 @app.on_event("startup")
