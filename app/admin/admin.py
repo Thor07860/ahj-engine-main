@@ -39,6 +39,16 @@ class CodeAdmin(RichTextModelView, model=Code):
 
 class LabelAdmin(RichTextModelView, model=Label):
     column_list = [Label.id, Label.upc_code, Label.name, Label.is_active]
+    form_widget_args = {
+        "background_color": {
+            "type": "color",
+            "value": "#ffffff",
+        },
+        "text_color": {
+            "type": "color",
+            "value": "#000000",
+        },
+    }
 
 
 class CodeTypeAdmin(ModelView, model=CodeType):
