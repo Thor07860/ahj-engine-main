@@ -6,11 +6,13 @@ from app.schemas.utility import UtilityCreate, UtilityUpdate
 class UtilityService:
 
     def create(self, db: Session, data: UtilityCreate):
-        payload = data.dict()
-        payload["name"] = payload.get("utility_name")
+        payload = data.dict(exclude_none=True)
+        canonical_name = payload.get("name") or payload.get("utility_name") or "Unknown Utility"
+        payload["name"] = canonical_name
+        payload["utility_name"] = payload.get("utility_name") or canonical_name
 
         ahj = db.query(AHJ).filter(AHJ.id == payload.get("ahj_id")).first()
-        payload["state_id"] = ahj.state_id if ahj else None
+        payload["state_id"] = payload.get("state_id") or (ahj.state_id if ahj else None)
 
         utility = Utility(**payload)
         db.add(utility)
@@ -28,11 +30,14 @@ class UtilityService:
         utility = self.get(db, utility_id)
         if not utility:
             return None
-        payload = data.dict()
-        payload["name"] = payload.get("utility_name")
+        payload = data.dict(exclude_none=True)
+        canonical_name = payload.get("name") or payload.get("utility_name")
+        if canonical_name:
+            payload["name"] = canonical_name
+            payload["utility_name"] = payload.get("utility_name") or canonical_name
 
         ahj = db.query(AHJ).filter(AHJ.id == payload.get("ahj_id")).first()
-        payload["state_id"] = ahj.state_id if ahj else utility.state_id
+        payload["state_id"] = payload.get("state_id") or (ahj.state_id if ahj else utility.state_id)
 
         for key, value in payload.items():
             setattr(utility, key, value)

@@ -17,12 +17,30 @@ class StateLookupService:
         for ahj in ahjs:
             ahj_list.append({
                 "id": ahj.id,
+                "name": ahj.name,
                 "ahj_name": ahj.ahj_name,
-                "utilities": [{"id": u.id, "utility_name": u.utility_name, "response_type": u.response_type} for u in ahj.utilities]
+                "county": ahj.county,
+                "city": ahj.city,
+                "utilities": [
+                    {
+                        "id": u.id,
+                        "name": u.name,
+                        "utility_name": u.utility_name,
+                        "response_type": u.response_type,
+                        "utility_type": u.utility_type,
+                        "service_territory": u.service_territory,
+                        "eia_id": u.eia_id,
+                        "phone": u.phone,
+                        "website": u.website,
+                    }
+                    for u in ahj.utilities
+                ]
             })
 
         return {
             "abbrev": state.abbrev,
             "name": state.name,
+            "fips_code": state.fips_code,
+            "region": state.region,
             "ahjs": ahj_list
         }

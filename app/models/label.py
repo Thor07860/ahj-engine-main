@@ -33,4 +33,6 @@ class Label(Base):
         code = self.upc_code or self.label_number
         display_name = self.name or self.label_name
         return f"{code} - {display_name}"
-    
+
+    def __repr__(self):
+        return f"<Label(id={self.id}, code='{self.upc_code or self.label_number}', name='{self.name or self.label_name}')>"

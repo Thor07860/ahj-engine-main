@@ -5,8 +5,10 @@ from app.schemas.ahj import AHJCreate, AHJUpdate
 class AHJService:
 
     def create(self, db: Session, data: AHJCreate):
-        payload = data.dict()
-        payload["name"] = payload.get("ahj_name")
+        payload = data.dict(exclude_none=True)
+        canonical_name = payload.get("name") or payload.get("ahj_name") or "Unknown AHJ"
+        payload["name"] = canonical_name
+        payload["ahj_name"] = payload.get("ahj_name") or canonical_name
         ahj = AHJ(**payload)
         db.add(ahj)
         db.commit()
@@ -23,8 +25,11 @@ class AHJService:
         ahj = self.get(db, ahj_id)
         if not ahj:
             return None
-        payload = data.dict()
-        payload["name"] = payload.get("ahj_name")
+        payload = data.dict(exclude_none=True)
+        canonical_name = payload.get("name") or payload.get("ahj_name")
+        if canonical_name:
+            payload["name"] = canonical_name
+            payload["ahj_name"] = payload.get("ahj_name") or canonical_name
         for key, value in payload.items():
             setattr(ahj, key, value)
         db.commit()

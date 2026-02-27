@@ -5,8 +5,10 @@ from app.schemas.code_type import CodeTypeCreate, CodeTypeUpdate
 class CodeTypeService:
 
     def create(self, db: Session, data: CodeTypeCreate):
-        payload = data.dict()
-        payload["title"] = payload.get("key")
+        payload = data.dict(exclude_none=True)
+        canonical_title = payload.get("title") or payload.get("key") or "Untitled Code Type"
+        payload["title"] = canonical_title
+        payload["key"] = payload.get("key") or canonical_title
         obj = CodeType(**payload)
         db.add(obj)
         db.commit()
@@ -23,8 +25,11 @@ class CodeTypeService:
         obj = self.get(db, id)
         if not obj:
             return None
-        payload = data.dict()
-        payload["title"] = payload.get("key")
+        payload = data.dict(exclude_none=True)
+        canonical_title = payload.get("title") or payload.get("key")
+        if canonical_title:
+            payload["title"] = canonical_title
+            payload["key"] = payload.get("key") or canonical_title
         for k, v in payload.items():
             setattr(obj, k, v)
         db.commit()

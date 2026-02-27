@@ -28,9 +28,6 @@ class RichTextModelView(ModelView):
 class AHJAdmin(RichTextModelView, model=AHJ):
     column_list = [AHJ.id, AHJ.ahj_name]
 
-   
-
-    
 
 class UtilityAdmin(RichTextModelView, model=Utility):
     column_list = [Utility.id, Utility.utility_name]

@@ -1,7 +1,8 @@
 from app.schemas import BaseSchema
 
 class CodeTypeBase(BaseSchema):
-    key: str
+    title: str | None = None
+    key: str | None = None
     description: str | None = None
 
 class CodeTypeCreate(CodeTypeBase):
