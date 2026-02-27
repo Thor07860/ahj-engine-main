@@ -17,7 +17,7 @@ from app.models.combination_mapper import CombinationMapper
 # -------------------------
 
 class StateAdmin(ModelView, model=State):
-    column_list = [State.id, State.name]
+    column_list = [State.id, State.abbrev, State.name]
 
 
 class RichTextModelView(ModelView):
@@ -26,25 +26,25 @@ class RichTextModelView(ModelView):
 
 
 class AHJAdmin(RichTextModelView, model=AHJ):
-    column_list = [AHJ.id, AHJ.ahj_name]
+    column_list = [AHJ.id, AHJ.name, AHJ.state_id, AHJ.city, AHJ.county]
 
 
 class UtilityAdmin(RichTextModelView, model=Utility):
-    column_list = [Utility.id, Utility.utility_name]
+    column_list = [Utility.id, Utility.name, Utility.state_id, Utility.ahj_id, Utility.utility_type]
 
 
 class CodeAdmin(RichTextModelView, model=Code):
-    column_list = [Code.id, Code.code_name]
+    column_list = [Code.id, Code.title, Code.edition, Code.code_type_id, Code.code_amendments]
 
 
 class LabelAdmin(RichTextModelView, model=Label):
-    column_list = [Label.id, Label.label_name]
+    column_list = [Label.id, Label.upc_code, Label.name, Label.is_active]
 
 
 class CodeTypeAdmin(ModelView, model=CodeType):
-    # IMPORTANT: Your table field is 'name', not 'title'
     column_list = [
         CodeType.id,
+        CodeType.title,
         CodeType.key,
         CodeType.description
     ]

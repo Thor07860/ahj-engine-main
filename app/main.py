@@ -2,10 +2,10 @@
 
 from fastapi import FastAPI
 from fastapi.exceptions import HTTPException
+from fastapi.staticfiles import StaticFiles
 
 from app.core.error_handler import http_exception_handler, unhandled_exception_handler
 from app.core.database import init_db
-from fastapi.staticfiles import StaticFiles
 
 # Routers
 from app.api.v1.ahj_api import AHJAPI
@@ -15,15 +15,16 @@ from app.api.v1.code_api import CodeAPI
 from app.api.v1.ahj_engine_api import AHJEngineAPI
 from app.api.v1.state_lookup_api import StateLookupAPI
 from app.api.v1.auth_api import AuthAPI
+from app.api.v1.state_api import StateAPI
+from app.api.v1.label_api import LabelAPI
+from app.api.v1.note_api import NoteAPI
+from app.api.v1.formula_api import FormulaAPI
+from app.api.v1.combination_mapper_api import CombinationMapperAPI
 
 # SQLAdmin
 from app.admin.admin import setup_admin
 MAIN_APP_VERSION = "v1"
-<<<<<<< HEAD
 
-=======
-API_VERSION = "1.0.0"
->>>>>>> 97a533c (changes)
 # -----------------------------------
 # Initialize FastAPI App
 # -----------------------------------
@@ -34,6 +35,7 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 @app.on_event("startup")
 def on_startup():
     init_db()
+
 
 # -----------------------------------
 # Exception Handlers
@@ -52,6 +54,11 @@ app.include_router(CodeAPI().router, prefix="/api/v1/code", tags=["Code"])
 app.include_router(AHJEngineAPI().router, prefix="/api/v1/ahj-engine", tags=["AHJ Engine"])
 app.include_router(StateLookupAPI().router, prefix="/api/v1/state", tags=["State Lookup"])
 app.include_router(AuthAPI().router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(StateAPI().router, prefix="/api/v1/states", tags=["States"])
+app.include_router(LabelAPI().router, prefix="/api/v1/label", tags=["Label"])
+app.include_router(NoteAPI().router, prefix="/api/v1/note", tags=["Note"])
+app.include_router(FormulaAPI().router, prefix="/api/v1/formula", tags=["Formula"])
+app.include_router(CombinationMapperAPI().router, prefix="/api/v1/combination-mapper", tags=["Combination Mapper"])
 
 
 # -----------------------------------
@@ -65,4 +72,4 @@ setup_admin(app)
 # -----------------------------------
 @app.get("/")
 def root():
-    return {"message": "AHJ Engine Running Successfully 🚀"}
+    return {"message": "AHJ Engine Running Successfully"}
