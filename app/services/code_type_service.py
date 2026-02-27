@@ -5,7 +5,9 @@ from app.schemas.code_type import CodeTypeCreate, CodeTypeUpdate
 class CodeTypeService:
 
     def create(self, db: Session, data: CodeTypeCreate):
-        obj = CodeType(**data.dict())
+        payload = data.dict()
+        payload["title"] = payload.get("key")
+        obj = CodeType(**payload)
         db.add(obj)
         db.commit()
         db.refresh(obj)
@@ -21,7 +23,9 @@ class CodeTypeService:
         obj = self.get(db, id)
         if not obj:
             return None
-        for k, v in data.dict().items():
+        payload = data.dict()
+        payload["title"] = payload.get("key")
+        for k, v in payload.items():
             setattr(obj, k, v)
         db.commit()
         db.refresh(obj)

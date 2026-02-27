@@ -1,11 +1,18 @@
 from sqlalchemy.orm import Session
 from app.models.utility import Utility
+from app.models.ahj import AHJ
 from app.schemas.utility import UtilityCreate, UtilityUpdate
 
 class UtilityService:
 
     def create(self, db: Session, data: UtilityCreate):
-        utility = Utility(**data.dict())
+        payload = data.dict()
+        payload["name"] = payload.get("utility_name")
+
+        ahj = db.query(AHJ).filter(AHJ.id == payload.get("ahj_id")).first()
+        payload["state_id"] = ahj.state_id if ahj else None
+
+        utility = Utility(**payload)
         db.add(utility)
         db.commit()
         db.refresh(utility)
@@ -21,7 +28,13 @@ class UtilityService:
         utility = self.get(db, utility_id)
         if not utility:
             return None
-        for key, value in data.dict().items():
+        payload = data.dict()
+        payload["name"] = payload.get("utility_name")
+
+        ahj = db.query(AHJ).filter(AHJ.id == payload.get("ahj_id")).first()
+        payload["state_id"] = ahj.state_id if ahj else utility.state_id
+
+        for key, value in payload.items():
             setattr(utility, key, value)
         db.commit()
         db.refresh(utility)

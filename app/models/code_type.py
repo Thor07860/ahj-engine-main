@@ -5,8 +5,15 @@ class CodeType(Base):
     __tablename__ = "code_types"
 
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String(100), nullable=False, unique=True)      # Example: success / failed / initiated
+    title = Column(String(255), nullable=False)
+    key = Column(String(100), nullable=True, unique=True)
     description = Column(String(255), nullable=True)
 
+   # def __str__(self):
+        #return self.key 
+    
     def __str__(self):
-        return self.key 
+        return self.title or self.key or "Code Type"
+
+    def __repr__(self):
+        return f"<CodeType(id={self.id}, title='{self.title or self.key}')>"

@@ -20,24 +20,27 @@ class StateAdmin(ModelView, model=State):
     column_list = [State.id, State.name]
 
 
-class AHJAdmin(ModelView, model=AHJ):
+class RichTextModelView(ModelView):
+    create_template = "sqladmin/richtext_create.html"
+    edit_template = "sqladmin/richtext_edit.html"
+
+
+class AHJAdmin(RichTextModelView, model=AHJ):
     column_list = [AHJ.id, AHJ.ahj_name]
 
-    class Media:
-        js = [
-            "https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js", "/static/tinymce_init.js",
-        ]
+   
 
+    
 
-class UtilityAdmin(ModelView, model=Utility):
+class UtilityAdmin(RichTextModelView, model=Utility):
     column_list = [Utility.id, Utility.utility_name]
 
 
-class CodeAdmin(ModelView, model=Code):
+class CodeAdmin(RichTextModelView, model=Code):
     column_list = [Code.id, Code.code_name]
 
 
-class LabelAdmin(ModelView, model=Label):
+class LabelAdmin(RichTextModelView, model=Label):
     column_list = [Label.id, Label.label_name]
 
 
@@ -58,18 +61,12 @@ class CombinationMapperAdmin(ModelView, model=CombinationMapper):
     ]
 
 
-class NoteAdmin(ModelView, model=Note):
+class NoteAdmin(RichTextModelView, model=Note):
     column_list = [Note.id, Note.code_id]
-    form_widget_overrides = {
-        "note_description": "textarea"
-    }
 
 
-class FormulaAdmin(ModelView, model=Formula):
+class FormulaAdmin(RichTextModelView, model=Formula):
     column_list = [Formula.id, Formula.code_id]
-    form_widget_overrides = {
-        "description": "textarea"
-    }
 
 
 # -------------------------

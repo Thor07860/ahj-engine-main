@@ -5,7 +5,9 @@ from app.schemas.code import CodeCreate, CodeUpdate
 class CodeService:
 
     def create(self, db: Session, data: CodeCreate):
-        obj = Code(**data.dict())
+        payload = data.dict()
+        payload["title"] = payload.get("code_name")
+        obj = Code(**payload)
         db.add(obj)
         db.commit()
         db.refresh(obj)
@@ -21,7 +23,9 @@ class CodeService:
         obj = self.get(db, id)
         if not obj:
             return None
-        for k, v in data.dict().items():
+        payload = data.dict()
+        payload["title"] = payload.get("code_name")
+        for k, v in payload.items():
             setattr(obj, k, v)
         db.commit()
         db.refresh(obj)

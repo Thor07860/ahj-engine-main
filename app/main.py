@@ -19,7 +19,7 @@ from app.api.v1.auth_api import AuthAPI
 # SQLAdmin
 from app.admin.admin import setup_admin
 MAIN_APP_VERSION = "v1"
-API_VERSION = "1.0.0"
+
 # -----------------------------------
 # Initialize FastAPI App
 # -----------------------------------

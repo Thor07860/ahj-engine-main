@@ -5,7 +5,9 @@ from app.schemas.ahj import AHJCreate, AHJUpdate
 class AHJService:
 
     def create(self, db: Session, data: AHJCreate):
-        ahj = AHJ(**data.dict())
+        payload = data.dict()
+        payload["name"] = payload.get("ahj_name")
+        ahj = AHJ(**payload)
         db.add(ahj)
         db.commit()
         db.refresh(ahj)
@@ -21,7 +23,9 @@ class AHJService:
         ahj = self.get(db, ahj_id)
         if not ahj:
             return None
-        for key, value in data.dict().items():
+        payload = data.dict()
+        payload["name"] = payload.get("ahj_name")
+        for key, value in payload.items():
             setattr(ahj, key, value)
         db.commit()
         db.refresh(ahj)
