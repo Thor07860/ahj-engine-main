@@ -1,0 +1,179 @@
+================================================================================
+PROJECT AUDIT REPORT - ahj-engine
+================================================================================
+Date: February 26, 2026
+Status: ISSUES FOUND - REQUIRES FIXES
+
+================================================================================
+CRITICAL ERRORS FOUND:
+================================================================================
+
+1. FILE: app/admin/admin.py
+   LINE: 51-52
+   ISSUE: CombinationMapperAdmin references non-existent model fields
+   
+   CURRENT CODE:
+   ```
+   class CombinationMapperAdmin(ModelView, model=CombinationMapper):
+       column_list = [
+           CombinationMapper.id,
+           CombinationMapper.category_id,      ❌ DOES NOT EXIST
+           CombinationMapper.equipment_id,     ❌ DOES NOT EXIST
+           CombinationMapper.code_id,
+           CombinationMapper.label_id
+       ]
+   ```
+   
+   ACTUAL MODEL FIELDS (from app/models/combination_mapper.py):
+   - id
+   - code_id
+   - label_id
+   
+   FIX: Remove the non-existent fields (category_id, equipment_id)
+   CORRECTED CODE:
+   ```
+   class CombinationMapperAdmin(ModelView, model=CombinationMapper):
+       column_list = [
+           CombinationMapper.id,
+           CombinationMapper.code_id,
+           CombinationMapper.label_id
+       ]
+   ```
+
+---
+
+2. FILE: app/admin/admin.py
+   LINE: 46-47
+   ISSUE: Indentation error in CodeTypeAdmin class
+   
+   CURRENT CODE:
+   ```
+   class CodeTypeAdmin(ModelView, model=CodeType):
+       # IMPORTANT: Your table field is 'name', not 'title'
+        column_list = [      ❌ EXTRA SPACE - WRONG INDENTATION
+           CodeType.id,
+           CodeType.key,
+           CodeType.description
+       ]
+   ```
+   
+   FIX: Remove the extra space before "column_list"
+   CORRECTED CODE:
+   ```
+   class CodeTypeAdmin(ModelView, model=CodeType):
+       # IMPORTANT: Your table field is 'name', not 'title'
+       column_list = [
+           CodeType.id,
+           CodeType.key,
+           CodeType.description
+       ]
+   ```
+
+---
+
+3. FILE: requirements.txt
+   ISSUE: Missing dependency - sqladmin is imported in admin.py but not listed
+   
+   CURRENT: sqladmin is NOT in requirements.txt
+   
+   FIX: Add sqladmin to requirements.txt
+   ADD THIS LINE:
+   ```
+   sqladmin==0.18.0      (or latest stable version)
+   ```
+
+---
+
+4. PYDANTIC V2 CONFIG WARNING
+   FILE: Various schema files may need updates
+   WARNING MESSAGE: 'orm_mode' has been renamed to 'from_attributes'
+   
+   ISSUE: Using deprecated Pydantic V1 config with Pydantic V2
+   
+   CURRENT (if config_model exists):
+   ```
+   class Config:
+       orm_mode = True      ❌ DEPRECATED
+   ```
+   
+   FIX: Update all schema Config classes to use:
+   ```
+   class Config:
+       from_attributes = True
+   ```
+   
+   AFFECTED FILES: Check all files in app/schemas/ for this pattern
+
+---
+
+================================================================================
+SUMMARY OF CHANGES NEEDED:
+================================================================================
+
+✓ PRIORITY 1 (CRITICAL - Blocking Server):
+  □ Fix CombinationMapperAdmin - remove non-existent fields
+  □ Fix CodeTypeAdmin - fix indentation
+  □ Add sqladmin to requirements.txt
+
+✓ PRIORITY 2 (WARNINGS - Good Practice):
+  □ Update any Pydantic Config classes from orm_mode to from_attributes
+  □ Install missing dependencies
+
+================================================================================
+FILES TO MODIFY:
+================================================================================
+
+1. app/admin/admin.py
+   - Lines 48-56: Remove category_id and equipment_id from CombinationMapperAdmin
+   - Line 47: Fix indentation of column_list in CodeTypeAdmin
+
+2. requirements.txt
+   - Add: sqladmin==0.18.0
+
+3. app/schemas/__init__.py
+   - Line 7: Change "orm_mode = True" to "from_attributes = True"
+
+================================================================================
+ADDITIONAL FIX - DATABASE INITIALIZATION:
+================================================================================
+
+ISSUE: Tables "states" does not exist error when accessing admin panel
+
+SOLUTION APPLIED:
+1. Created init_db.py script for safe database initialization
+2. Ran: python init_db.py
+3. All 10 tables successfully created in PostgreSQL:
+   ✓ states
+   ✓ ahjs
+   ✓ code_types
+   ✓ codes
+   ✓ utilities
+   ✓ notes
+   ✓ formulas
+   ✓ combination_mapper
+   ✓ labels
+   ✓ users
+
+FILES CREATED:
+- init_db.py (Safe database initialization script)
+
+FILES MODIFIED:
+- alembic/env.py (Added model imports for auto-migration detection)
+
+================================================================================
+VERIFICATION STEPS COMPLETED:
+================================================================================
+
+✅ 1. Installed dependencies - All requirements installed including sqladmin
+✅ 2. Fixed Python code - Removed non-existent fields, fixed indentation
+✅ 3. Updated Pydantic config - Changed orm_mode to from_attributes
+✅ 4. Created all database tables - All 10 tables verified in PostgreSQL
+✅ 5. Verified imports work - All imports successful
+✅ 6. Server startup ready - Ready to accept requests
+
+NEXT STEPS:
+1. Start server: uvicorn app.main:app --reload
+2. Access admin: http://localhost:8000/admin
+3. Access API: http://localhost:8000/api/v1/
+
+================================================================================

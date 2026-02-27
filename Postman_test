@@ -1,0 +1,38 @@
+1.method : post : http://localhost:8000/api/v1/ahj-engine/get-ahj-details
+
+2.all codes : GET : http://localhost:8000/api/v1/ahj-engine/get-ahj-details
+
+3.All states : GET : http://localhost:8000/api/v1/state
+
+4.ALL  AHJ : GET :http://localhost:8000/api/v1/ahj
+
+5.Auth :  POST :http://localhost:8000/api/v1/ahj
+
+
+
+Create State
+
+Go to: /admin → States → “+ New State”
+
+Abbrev: TX
+Name: Texas
+B. Create AHJ
+
+Go to: AHJs → “+ New AHJ”
+
+State: Texas
+AHJ Name: TX-ABC Information
+
+Don’t select utility yet — not required.
+
+C. Create 3 Codes
+
+Go to: Codes → “+ New Code”
+
+Create EXACTLY these 3 names (spelling must match when testing):
+
+2023 Electrical Code ABC
+
+2026 Structural Code XYZ
+
+2023 Fire Code 123

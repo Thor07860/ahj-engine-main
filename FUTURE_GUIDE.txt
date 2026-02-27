@@ -1,0 +1,793 @@
+================================================================================
+FUTURE GUIDE: HOW TO ADD NEW SCHEMAS, MODELS & CONNECT THEM
+================================================================================
+Date: February 26, 2026
+Version: 1.0
+
+This guide explains the complete process for adding new models, schemas, and
+API endpoints to your AHJ Engine application in the future.
+
+================================================================================
+ARCHITECTURE OVERVIEW
+================================================================================
+
+Your project follows this architecture:
+
+DATABASE → MODELS → SCHEMAS → SERVICES → API ROUTES → ADMIN PANEL
+
+1. DATABASE: PostgreSQL tables (defined in .env with DATABASE_URL)
+2. MODELS: SQLAlchemy ORM models (app/models/)
+3. SCHEMAS: Pydantic validation schemas (app/schemas/)
+4. SERVICES: Business logic layer (app/services/)
+5. API ROUTES: FastAPI endpoints (app/api/v1/)
+6. ADMIN PANEL: SQLAdmin views (app/admin/admin.py)
+
+================================================================================
+STEP-BY-STEP GUIDE: ADD A NEW ENTITY (EXAMPLE: "Department")
+================================================================================
+
+SCENARIO: You want to add a Department entity to manage different departments
+with name, code, and description fields.
+
+---
+
+STEP 1: CREATE THE MODEL
+========================
+
+File: app/models/department.py
+
+```python
+from sqlalchemy import Column, Integer, String, Text
+from app.core.database import Base
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    code = Column(String(50), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+```
+
+KEY POINTS:
+- File name should match entity name (lowercase): department.py
+- Class name should be PascalCase: Department
+- __tablename__ should be plural: departments
+- Always include: id (primary key), and required fields
+- Use nullable=False for required fields
+- Use unique=True for fields that should be one-of-a-kind
+- Use index=True for fields you'll filter by frequently
+
+---
+
+STEP 2: CREATE THE SCHEMA
+==========================
+
+File: app/schemas/department.py
+
+```python
+from pydantic import BaseModel
+from app.schemas import BaseSchema
+
+class DepartmentBase(BaseSchema):
+    """Base department schema with common fields"""
+    name: str
+    code: str
+    description: str | None = None
+
+class DepartmentCreate(DepartmentBase):
+    """Schema for creating a new department"""
+    pass
+
+class DepartmentUpdate(BaseSchema):
+    """Schema for updating a department (all fields optional)"""
+    name: str | None = None
+    code: str | None = None
+    description: str | None = None
+
+class DepartmentResponse(DepartmentBase):
+    """Schema for API response"""
+    id: int
+    
+    class Config:
+        from_attributes = True  # ✅ Use this! (Not orm_mode)
+
+class DepartmentList(BaseSchema):
+    """Schema for list responses"""
+    id: int
+    name: str
+    code: str
+```
+
+KEY POINTS:
+- Create separate schemas for different operations:
+  * DepartmentBase: Common fields
+  * DepartmentCreate: For POST requests (no id)
+  * DepartmentUpdate: For PUT/PATCH requests (optional fields)
+  * DepartmentResponse: For responses (includes id)
+  * DepartmentList: For list responses (simplified)
+- Always inherit from BaseSchema (for Pydantic V2 config)
+- Use Config with from_attributes = True (required for Pydantic V2)
+- Use str | None for optional fields
+- Always use from_attributes in response schemas
+
+---
+
+STEP 3: CREATE THE SERVICE
+============================
+
+File: app/services/department_service.py
+
+```python
+from sqlalchemy.orm import Session
+from app.models.department import Department
+from app.schemas.department import DepartmentCreate, DepartmentUpdate
+from fastapi import HTTPException
+
+class DepartmentService:
+    
+    def get_all(self, db: Session):
+        """Get all departments"""
+        return db.query(Department).all()
+    
+    def get_by_id(self, db: Session, department_id: int):
+        """Get department by ID"""
+        department = db.query(Department).filter(
+            Department.id == department_id
+        ).first()
+        
+        if not department:
+            raise HTTPException(status_code=404, detail="Department not found")
+        
+        return department
+    
+    def get_by_code(self, db: Session, code: str):
+        """Get department by code"""
+        return db.query(Department).filter(Department.code == code).first()
+    
+    def create(self, db: Session, department: DepartmentCreate):
+        """Create new department"""
+        # Check if department with this code already exists
+        existing = self.get_by_code(db, department.code)
+        if existing:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Department with code '{department.code}' already exists"
+            )
+        
+        db_department = Department(**department.dict())
+        db.add(db_department)
+        db.commit()
+        db.refresh(db_department)
+        
+        return db_department
+    
+    def update(self, db: Session, department_id: int, department: DepartmentUpdate):
+        """Update department"""
+        db_department = self.get_by_id(db, department_id)
+        
+        # Update only provided fields
+        update_data = department.dict(exclude_unset=True)
+        for field, value in update_data.items():
+            setattr(db_department, field, value)
+        
+        db.commit()
+        db.refresh(db_department)
+        
+        return db_department
+    
+    def delete(self, db: Session, department_id: int):
+        """Delete department"""
+        db_department = self.get_by_id(db, department_id)
+        db.delete(db_department)
+        db.commit()
+        
+        return {"message": "Department deleted successfully"}
+```
+
+KEY POINTS:
+- Service contains business logic
+- Always validate before operations
+- Use HTTPException for errors (status_code, detail)
+- Use db.add(), db.commit(), db.refresh() for database operations
+- Use dict(exclude_unset=True) for partial updates
+- Return meaningful responses
+- Handle edge cases (duplicates, not found, etc.)
+
+---
+
+STEP 4: CREATE API ROUTES
+==========================
+
+File: app/api/v1/department_api.py
+
+```python
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.schemas.department import (
+    DepartmentCreate, DepartmentUpdate, DepartmentResponse, DepartmentList
+)
+from app.services.department_service import DepartmentService
+
+class DepartmentAPI:
+    def __init__(self):
+        self.router = APIRouter()
+        self.service = DepartmentService()
+        self._setup_routes()
+    
+    def _setup_routes(self):
+        @self.router.get("/", response_model=list[DepartmentList])
+        def list_departments(db: Session = Depends(get_db)):
+            """Get all departments"""
+            return self.service.get_all(db)
+        
+        @self.router.get("/{department_id}", response_model=DepartmentResponse)
+        def get_department(department_id: int, db: Session = Depends(get_db)):
+            """Get department by ID"""
+            return self.service.get_by_id(db, department_id)
+        
+        @self.router.post("/", response_model=DepartmentResponse)
+        def create_department(
+            department: DepartmentCreate, 
+            db: Session = Depends(get_db)
+        ):
+            """Create new department"""
+            return self.service.create(db, department)
+        
+        @self.router.put("/{department_id}", response_model=DepartmentResponse)
+        def update_department(
+            department_id: int, 
+            department: DepartmentUpdate, 
+            db: Session = Depends(get_db)
+        ):
+            """Update department"""
+            return self.service.update(db, department_id, department)
+        
+        @self.router.delete("/{department_id}")
+        def delete_department(
+            department_id: int, 
+            db: Session = Depends(get_db)
+        ):
+            """Delete department"""
+            return self.service.delete(db, department_id)
+```
+
+KEY POINTS:
+- Create a class to hold all routes
+- Initialize router and service in __init__
+- Use _setup_routes() to register all endpoints
+- Use response_model for automatic validation
+- Use Depends(get_db) to inject database session
+- Use appropriate HTTP methods: GET, POST, PUT, DELETE
+- Include docstrings for Swagger documentation
+- Use URL parameters for IDs: /{id}
+- Use request body for data
+
+ENDPOINTS CREATED:
+- GET /api/v1/department/ - List all
+- GET /api/v1/department/{id} - Get by ID
+- POST /api/v1/department/ - Create
+- PUT /api/v1/department/{id} - Update
+- DELETE /api/v1/department/{id} - Delete
+
+---
+
+STEP 5: REGISTER API ROUTES IN MAIN
+====================================
+
+File: app/main.py
+
+ADD THIS IMPORT:
+```python
+from app.api.v1.department_api import DepartmentAPI
+```
+
+ADD THIS IN THE "Register API Routers" SECTION (around line 33):
+```python
+app.include_router(DepartmentAPI().router, prefix="/api/v1/department", tags=["Department"])
+```
+
+YOUR MAIN.PY SHOULD LOOK LIKE:
+```python
+# ... existing imports ...
+from app.api.v1.department_api import DepartmentAPI
+
+app = FastAPI(title="AHJ Engine")
+
+# ... exception handlers ...
+
+# Register API Routers
+app.include_router(AHJAPI().router, prefix="/api/v1/ahj", tags=["AHJ"])
+app.include_router(DepartmentAPI().router, prefix="/api/v1/department", tags=["Department"])  # ← ADD THIS
+app.include_router(UtilityAPI().router, prefix="/api/v1/utility", tags=["Utility"])
+# ... rest of routers ...
+```
+
+---
+
+STEP 6: ADD ADMIN VIEW
+======================
+
+File: app/admin/admin.py
+
+ADD THIS IMPORT (at the top with other model imports):
+```python
+from app.models.department import Department
+```
+
+ADD THIS CLASS (in the "SQLAdmin Model Views" section):
+```python
+class DepartmentAdmin(ModelView, model=Department):
+    column_list = [Department.id, Department.name, Department.code]
+    form_columns = [Department.name, Department.code, Department.description]
+```
+
+ADD THIS IN setup_admin() FUNCTION (in the "Register Admin" section):
+```python
+admin.add_view(DepartmentAdmin)
+```
+
+YOUR ADMIN.PY SHOULD LOOK LIKE:
+```python
+from sqladmin import Admin, ModelView
+from app.core.database import engine
+from app.models.department import Department  # ← ADD THIS
+
+# ... other model imports ...
+
+class DepartmentAdmin(ModelView, model=Department):  # ← ADD THIS
+    column_list = [Department.id, Department.name, Department.code]
+
+# ... other admin classes ...
+
+def setup_admin(app):
+    admin = Admin(app, engine)
+    
+    admin.add_view(DepartmentAdmin)  # ← ADD THIS
+    admin.add_view(StateAdmin)
+    # ... other views ...
+```
+
+---
+
+STEP 7: REGISTER MODEL IN __INIT__.PY (OPTIONAL BUT RECOMMENDED)
+=================================================================
+
+File: app/models/__init__.py
+
+ADD THIS LINE:
+```python
+from app.models.department import Department
+```
+
+This makes it easier to import: from app.models import Department
+
+---
+
+STEP 8: CREATE DATABASE MIGRATION
+==================================
+
+OPTION A: Automatic Migration (Recommended)
+```bash
+cd c:\Users\aadil\Videos\ahj-engine
+venv\Scripts\alembic revision --autogenerate -m "Add Department table"
+venv\Scripts\alembic upgrade head
+```
+
+OPTION B: Create Tables Manually
+```bash
+venv\Scripts\python init_db.py
+```
+
+This will automatically detect the new Department model and create the table.
+
+---
+
+STEP 9: TEST YOUR NEW ENDPOINT
+===============================
+
+1. RESTART SERVER:
+```bash
+venv\Scripts\uvicorn app.main:app --reload
+```
+
+2. TEST WITH SWAGGER (Built-in):
+```
+http://localhost:8000/docs
+```
+
+You'll see a new "Department" section with all CRUD endpoints!
+
+3. TEST MANUALLY:
+```bash
+# Create a department
+curl -X POST "http://localhost:8000/api/v1/department/" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Engineering", "code": "ENG", "description": "Engineering Department"}'
+
+# List departments
+curl "http://localhost:8000/api/v1/department/"
+
+# Get specific department
+curl "http://localhost:8000/api/v1/department/1"
+
+# Update department
+curl -X PUT "http://localhost:8000/api/v1/department/1" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Engineering Updated"}'
+
+# Delete department
+curl -X DELETE "http://localhost:8000/api/v1/department/1"
+```
+
+4. TEST IN ADMIN PANEL:
+```
+http://localhost:8000/admin/department/list
+```
+
+---
+
+STEP 10: HANDLE RELATIONSHIPS (IF NEEDED)
+==========================================
+
+Example: If Department has many Employees, use relationships:
+
+FILE: app/models/department.py
+```python
+from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy.orm import relationship
+from app.core.database import Base
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    code = Column(String(50), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+    
+    # Relationship
+    employees = relationship("Employee", backref="department")
+```
+
+FILE: app/models/employee.py
+```python
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
+from app.core.database import Base
+
+class Employee(Base):
+    __tablename__ = "employees"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    department_id = Column(Integer, ForeignKey("departments.id"))
+    
+    # Relationship
+    department = relationship("Department", backref="employees")
+```
+
+KEY POINTS:
+- Use ForeignKey("table_name.column_name")
+- Use relationship() for ORM relationships
+- Use backref for reverse relationships
+- Filter in services: db.query(Department).filter(Department.id == id).first()
+
+================================================================================
+COMMON PATTERNS & BEST PRACTICES
+================================================================================
+
+PATTERN 1: FILTERING WITH CONDITIONS
+=====================================
+
+In service:
+```python
+def get_by_name(self, db: Session, name: str):
+    return db.query(Department).filter(
+        Department.name.ilike(f"%{name}%")  # Case-insensitive search
+    ).all()
+```
+
+In API:
+```python
+@self.router.get("/search/")
+def search_departments(name: str, db: Session = Depends(get_db)):
+    return self.service.get_by_name(db, name)
+```
+
+---
+
+PATTERN 2: PAGINATION
+=====================
+
+In service:
+```python
+def get_paginated(self, db: Session, skip: int = 0, limit: int = 10):
+    return db.query(Department).offset(skip).limit(limit).all()
+
+def get_count(self, db: Session):
+    return db.query(Department).count()
+```
+
+In API:
+```python
+@self.router.get("/")
+def list_departments(
+    skip: int = 0, 
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    items = self.service.get_paginated(db, skip, limit)
+    total = self.service.get_count(db)
+    
+    return {
+        "items": items,
+        "total": total,
+        "skip": skip,
+        "limit": limit
+    }
+```
+
+---
+
+PATTERN 3: SORTING
+==================
+
+In service:
+```python
+def get_sorted(self, db: Session, sort_by: str = "name", sort_order: str = "asc"):
+    query = db.query(Department)
+    
+    if sort_by == "name":
+        column = Department.name
+    elif sort_by == "code":
+        column = Department.code
+    else:
+        column = Department.id
+    
+    if sort_order.lower() == "desc":
+        return query.order_by(column.desc()).all()
+    else:
+        return query.order_by(column.asc()).all()
+```
+
+In API:
+```python
+@self.router.get("/")
+def list_departments(
+    sort_by: str = "name",
+    sort_order: str = "asc",
+    db: Session = Depends(get_db)
+):
+    return self.service.get_sorted(db, sort_by, sort_order)
+```
+
+---
+
+PATTERN 4: BULK OPERATIONS
+===========================
+
+In service:
+```python
+def bulk_create(self, db: Session, departments: list[DepartmentCreate]):
+    """Create multiple departments at once"""
+    db_departments = [Department(**dept.dict()) for dept in departments]
+    db.add_all(db_departments)
+    db.commit()
+    
+    for dept in db_departments:
+        db.refresh(dept)
+    
+    return db_departments
+
+def bulk_delete(self, db: Session, ids: list[int]):
+    """Delete multiple departments"""
+    db.query(Department).filter(Department.id.in_(ids)).delete()
+    db.commit()
+    
+    return {"message": f"Deleted {len(ids)} departments"}
+```
+
+---
+
+PATTERN 5: VALIDATION
+======================
+
+In schema:
+```python
+from pydantic import BaseModel, field_validator, Field
+
+class DepartmentCreate(BaseSchema):
+    name: str = Field(..., min_length=1, max_length=100)
+    code: str = Field(..., min_length=1, max_length=50)
+    description: str | None = None
+    
+    @field_validator('code')
+    def validate_code(cls, v):
+        if not v.isalnum():
+            raise ValueError('Code must be alphanumeric')
+        return v.upper()
+```
+
+---
+
+PATTERN 6: SOFT DELETE (Don't permanently delete)
+==================================================
+
+In model:
+```python
+from sqlalchemy import Column, Integer, String, DateTime
+from datetime import datetime
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    code = Column(String(50), nullable=False)
+    deleted_at = Column(DateTime, nullable=True)  # Soft delete marker
+```
+
+In service:
+```python
+def get_all(self, db: Session):
+    """Get only active departments"""
+    return db.query(Department).filter(Department.deleted_at == None).all()
+
+def delete(self, db: Session, department_id: int):
+    """Soft delete - mark as deleted instead of removing"""
+    db_department = self.get_by_id(db, department_id)
+    db_department.deleted_at = datetime.now()
+    db.commit()
+    return {"message": "Department deleted (soft delete)"}
+```
+
+================================================================================
+FOLDER STRUCTURE CHECKLIST
+================================================================================
+
+When adding a new entity, verify these files exist/are updated:
+
+□ app/models/department.py ...................... NEW - Database model
+□ app/schemas/department.py ..................... NEW - Validation schemas
+□ app/services/department_service.py ........... NEW - Business logic
+□ app/api/v1/department_api.py ................. NEW - API routes
+□ app/main.py .................................. UPDATED - Register routes
+□ app/admin/admin.py ............................ UPDATED - Add admin view
+□ app/models/__init__.py ........................ UPDATED - Export model (optional)
+□ alembic/env.py ............................... ✓ Already has imports
+□ requirements.txt .............................. ✓ No changes needed
+□ .env .......................................... ✓ No changes needed
+
+QUICK CHECKLIST (5 MINUTES):
+✓ Create model file in app/models/
+✓ Create schema file in app/schemas/
+✓ Create service file in app/services/
+✓ Create API file in app/api/v1/
+✓ Update app/main.py with route registration
+✓ Update app/admin/admin.py with admin view
+✓ Run: python init_db.py (or alembic revision --autogenerate)
+✓ Restart server
+✓ Test in Swagger: http://localhost:8000/docs
+
+================================================================================
+TROUBLESHOOTING COMMON ISSUES
+================================================================================
+
+ISSUE 1: "ModuleNotFoundError: No module named 'app.models.department'"
+SOLUTION: Make sure the file path is exactly: app/models/department.py
+
+ISSUE 2: "Table 'departments' doesn't exist"
+SOLUTION: Run: python init_db.py
+(or: venv\Scripts\alembic revision --autogenerate -m "Add Department"
+     venv\Scripts\alembic upgrade head)
+
+ISSUE 3: Pydantic validation error
+SOLUTION: Check schema uses from_attributes = True (not orm_mode)
+
+ISSUE 4: HTTPException not returning proper error
+SOLUTION: Make sure service raises HTTPException, not returning None
+
+ISSUE 5: Admin panel shows but can't list items
+SOLUTION: Verify the admin class column_list matches actual model fields
+
+ISSUE 6: API returns 500 error
+SOLUTION: Check server logs for the exact error message
+
+ISSUE 7: Schema validation fails
+SOLUTION: Verify field types match: str, int, bool, list, etc.
+         Check optional fields use: field: str | None = None
+
+================================================================================
+QUICK REFERENCE: FILE TEMPLATES
+================================================================================
+
+Once you understand the pattern, you can copy-paste these templates:
+
+TEMPLATE 1: Model (app/models/NEW_ENTITY.py)
+=============================================
+```python
+from sqlalchemy import Column, Integer, String
+from app.core.database import Base
+
+class NewEntity(Base):
+    __tablename__ = "new_entities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+```
+
+TEMPLATE 2: Schema (app/schemas/new_entity.py)
+==============================================
+```python
+from app.schemas import BaseSchema
+
+class NewEntityCreate(BaseSchema):
+    name: str
+
+class NewEntityResponse(BaseSchema):
+    id: int
+    name: str
+    
+    class Config:
+        from_attributes = True
+```
+
+TEMPLATE 3: Service (app/services/new_entity_service.py)
+=========================================================
+```python
+from sqlalchemy.orm import Session
+from app.models.new_entity import NewEntity
+from app.schemas.new_entity import NewEntityCreate
+
+class NewEntityService:
+    def get_all(self, db: Session):
+        return db.query(NewEntity).all()
+    
+    def create(self, db: Session, entity: NewEntityCreate):
+        db_entity = NewEntity(**entity.dict())
+        db.add(db_entity)
+        db.commit()
+        db.refresh(db_entity)
+        return db_entity
+```
+
+TEMPLATE 4: API (app/api/v1/new_entity_api.py)
+==============================================
+```python
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.schemas.new_entity import NewEntityCreate, NewEntityResponse
+from app.services.new_entity_service import NewEntityService
+
+class NewEntityAPI:
+    def __init__(self):
+        self.router = APIRouter()
+        self.service = NewEntityService()
+        self._setup_routes()
+    
+    def _setup_routes(self):
+        @self.router.get("/", response_model=list[NewEntityResponse])
+        def list_entities(db: Session = Depends(get_db)):
+            return self.service.get_all(db)
+        
+        @self.router.post("/", response_model=NewEntityResponse)
+        def create_entity(entity: NewEntityCreate, db: Session = Depends(get_db)):
+            return self.service.create(db, entity)
+```
+
+================================================================================
+CONCLUSION
+================================================================================
+
+By following this guide, you can add new entities to your system in 5-10 minutes.
+
+The key is: MODEL → SCHEMA → SERVICE → API → ADMIN
+
+Everything flows from the database model through to the API and admin panel.
+
+Keep this file for future reference when adding new features!
+
+================================================================================
