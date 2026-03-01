@@ -75,22 +75,32 @@ class LabelAdmin(RichTextModelView, model=Label):
         
         try:
             # Get all unique UPC codes
-            upc_codes_query = db_session.execute(
-                text('SELECT DISTINCT upc_code FROM labels WHERE upc_code IS NOT NULL ORDER BY upc_code')
-            ).fetchall()
-            upc_code_choices = [("", "-- Select --")] + [(str(uc[0]), str(uc[0])) for uc in upc_codes_query]
+            try:
+                upc_codes_query = db_session.execute(
+                    text('SELECT DISTINCT upc_code FROM labels WHERE upc_code IS NOT NULL ORDER BY upc_code')
+                ).fetchall()
+                upc_code_choices = [("", "-- Select --")] + [(str(uc[0]), str(uc[0])) for uc in upc_codes_query]
+            except Exception:
+                print("Info: upc_code column not yet available in database. Running migrations...")
+                upc_code_choices = [("", "-- Select --")]
             
             # Get all unique label_number values
-            label_numbers_query = db_session.execute(
-                text('SELECT DISTINCT label_number FROM labels WHERE label_number IS NOT NULL ORDER BY label_number')
-            ).fetchall()
-            label_number_choices = [("", "-- Select --")] + [(str(ln[0]), str(ln[0])) for ln in label_numbers_query]
+            try:
+                label_numbers_query = db_session.execute(
+                    text('SELECT DISTINCT label_number FROM labels WHERE label_number IS NOT NULL ORDER BY label_number')
+                ).fetchall()
+                label_number_choices = [("", "-- Select --")] + [(str(ln[0]), str(ln[0])) for ln in label_numbers_query]
+            except Exception:
+                label_number_choices = [("", "-- Select --")]
             
             # Get all unique label_name values  
-            label_names_query = db_session.execute(
-                text('SELECT DISTINCT label_name FROM labels WHERE label_name IS NOT NULL ORDER BY label_name')
-            ).fetchall()
-            label_name_choices = [("", "-- Select --")] + [(str(ln[0][:100]), str(ln[0][:100])) for ln in label_names_query]
+            try:
+                label_names_query = db_session.execute(
+                    text('SELECT DISTINCT label_name FROM labels WHERE label_name IS NOT NULL ORDER BY label_name')
+                ).fetchall()
+                label_name_choices = [("", "-- Select --")] + [(str(ln[0][:100]), str(ln[0][:100])) for ln in label_names_query]
+            except Exception:
+                label_name_choices = [("", "-- Select --")]
             
         except Exception as e:
             print(f"Warning: Could not load dynamic label choices: {e}")
