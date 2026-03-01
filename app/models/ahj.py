@@ -22,11 +22,7 @@ class AHJ(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationship
-<<<<<<< HEAD
     state = relationship("State", back_populates="ahjs")
-=======
-    state = relationship("State", backref="ahjs")
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 
     def __str__(self):
         return self.name or self.ahj_name or "AHJ"

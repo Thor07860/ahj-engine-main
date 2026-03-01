@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from sqlalchemy import Column, Integer, String
 from app.core.database import Base
 
@@ -11,17 +10,3 @@ class CodeAmendment(Base):
 
     def __str__(self):
         return self.name
-=======
-from sqlalchemy import Column, Integer, String
-from app.core.database import Base
-
-
-class CodeAmendment(Base):
-    __tablename__ = "code_amendments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-
-    def __str__(self):
-        return self.name
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af

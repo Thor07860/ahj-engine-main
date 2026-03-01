@@ -1,10 +1,6 @@
-<<<<<<< HEAD
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-=======
-from sqlalchemy import Column, Integer, ForeignKey
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 from app.core.database import Base
 
 class CombinationMapper(Base):
@@ -13,7 +9,6 @@ class CombinationMapper(Base):
     id = Column(Integer, primary_key=True, index=True)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     equipment_id = Column(Integer, ForeignKey("equipment.id"), nullable=True)
-<<<<<<< HEAD
     code_id = Column(Integer, ForeignKey("codes.id"), nullable=True)
     label_id = Column(Integer, ForeignKey("labels.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -29,7 +24,3 @@ class CombinationMapper(Base):
     
     def __str__(self):
         return f"Code {self.code_id} -> Label {self.label_id}"
-=======
-    code_id = Column(Integer, ForeignKey("codes.id"), nullable=False)
-    label_id = Column(Integer, ForeignKey("labels.id"), nullable=False)
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af

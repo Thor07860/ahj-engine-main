@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship, synonym
-=======
-from sqlalchemy import Column, Integer, String, DateTime
-from sqlalchemy.sql import func
-from sqlalchemy.orm import synonym
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 from app.core.database import Base
 
 
@@ -14,11 +8,7 @@ class State(Base):
     __tablename__ = "states"
 
     id = Column(Integer, primary_key=True, index=True)
-<<<<<<< HEAD
     country_id = Column(Integer, ForeignKey("countries.id"), nullable=True, default=1)
-=======
-
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
     name = Column(String(100), nullable=False)
     abbrev = Column(String(2), unique=True, nullable=False)
     abbreviation = synonym("abbrev")
@@ -27,15 +17,12 @@ class State(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-<<<<<<< HEAD
     # Relationships
     country = relationship("Country", back_populates="states")
     ahjs = relationship("AHJ", back_populates="state")
     utilities = relationship("Utility", back_populates="state")
     clients = relationship("Client", back_populates="state")
 
-=======
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
     def __str__(self):
         return f"{self.abbrev} - {self.name}"
 
