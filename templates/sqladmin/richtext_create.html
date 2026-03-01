@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {% extends "sqladmin/create.html" %}
 
 {% block head %}
@@ -11,3 +12,12 @@
   <script src="/static/ckeditor_init.js"></script>
   <script src="/static/tag_input.js"></script>
 {% endblock %}
+=======
+{% extends "sqladmin/create.html" %}
+
+{% block tail %}
+  {{ super() }}
+  <script src="https://cdn.ckeditor.com/4.22.1/standard-all/ckeditor.js"></script>
+  <script src="/static/ckeditor_init.js"></script>
+{% endblock %}
+>>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af

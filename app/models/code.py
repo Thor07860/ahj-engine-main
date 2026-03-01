@@ -22,16 +22,23 @@ class Code(Base):
     adopted_at = Column(Date, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+<<<<<<< HEAD
     # Relationships
+=======
+    # Relationship
+>>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
     code_type = relationship("CodeType", backref="codes")
     amendment = relationship("CodeAmendment", backref="codes")
     applicable_category = relationship("ApplicableCodeCategory", backref="codes")
     state = relationship("State", backref="codes")
+<<<<<<< HEAD
     combination_mappers = relationship(
         "CombinationMapper",
         back_populates="code",
         cascade="all, delete-orphan"
     )
+=======
+>>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 
 
     #def __str__(self):

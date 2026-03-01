@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from sqlalchemy import Column, Integer, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -22,3 +23,15 @@ class StateCode(Base):
 
     def __repr__(self):
         return f"<StateCode(id={self.id}, state_id={self.state_id}, code_id={self.code_id})>"
+=======
+from sqlalchemy import Column, Integer, ForeignKey
+from app.core.database import Base
+
+
+class StateCode(Base):
+    __tablename__ = "state_codes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    state_id = Column(Integer, ForeignKey("states.id"), nullable=False)
+    code_id = Column(Integer, ForeignKey("codes.id"), nullable=False)
+>>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
