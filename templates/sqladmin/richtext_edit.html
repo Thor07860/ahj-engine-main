@@ -1,0 +1,13 @@
+{% extends "sqladmin/edit.html" %}
+
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="/static/sqladmin_custom.css">
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <script src="https://cdn.ckeditor.com/4.22.1/standard-all/ckeditor.js"></script>
+  <script src="/static/ckeditor_init.js"></script>
+  <script src="/static/tag_input.js"></script>
+{% endblock %}
