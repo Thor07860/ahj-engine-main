@@ -1,13 +1,9 @@
 from sqladmin import Admin, ModelView
-<<<<<<< HEAD
 from app.core.database import engine, SessionLocal
 from app.forms import TagField
 from wtforms import SelectField
 from wtforms.validators import Optional
 from sqlalchemy import text
-=======
-from app.core.database import engine
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 
 from app.models.state import State
 from app.models.ahj import AHJ
@@ -24,27 +20,17 @@ from app.models.combination_mapper import CombinationMapper
 # SQLAdmin Model Views
 # -------------------------
 
-<<<<<<< HEAD
-=======
-class StateAdmin(ModelView, model=State):
-    column_list = [State.id, State.abbrev, State.name]
-
-
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 class RichTextModelView(ModelView):
     create_template = "sqladmin/richtext_create.html"
     edit_template = "sqladmin/richtext_edit.html"
 
 
-<<<<<<< HEAD
 class StateAdmin(RichTextModelView, model=State):
     column_list = [State.id, State.abbrev, State.name]
     # Using native multi-select fields - will be transformed to tag UI by JavaScript
     # form_overrides = {'ahjs': TagField, 'utilities': TagField, 'clients': TagField}
 
 
-=======
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
 class AHJAdmin(RichTextModelView, model=AHJ):
     column_list = [AHJ.id, AHJ.name, AHJ.state_id, AHJ.city, AHJ.county]
 
@@ -59,24 +45,17 @@ class CodeAdmin(RichTextModelView, model=Code):
 
 class LabelAdmin(RichTextModelView, model=Label):
     column_list = [Label.id, Label.upc_code, Label.name, Label.is_active]
-<<<<<<< HEAD
     
     # Define form widget arguments for color pickers
-=======
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
     form_widget_args = {
         "background_color": {
             "type": "color",
             "value": "#ffffff",
-<<<<<<< HEAD
             "style": "width: 80px; height: 45px;",
-=======
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
         },
         "text_color": {
             "type": "color",
             "value": "#000000",
-<<<<<<< HEAD
             "style": "width: 80px; height: 45px;",
         },
     }
@@ -154,13 +133,6 @@ class LabelAdmin(RichTextModelView, model=Label):
 
 
 class CodeTypeAdmin(RichTextModelView, model=CodeType):
-=======
-        },
-    }
-
-
-class CodeTypeAdmin(ModelView, model=CodeType):
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
     column_list = [
         CodeType.id,
         CodeType.title,
@@ -169,11 +141,7 @@ class CodeTypeAdmin(ModelView, model=CodeType):
     ]
 
 
-<<<<<<< HEAD
 class CombinationMapperAdmin(RichTextModelView, model=CombinationMapper):
-=======
-class CombinationMapperAdmin(ModelView, model=CombinationMapper):
->>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af
     column_list = [
         CombinationMapper.id,
         CombinationMapper.code_id,
