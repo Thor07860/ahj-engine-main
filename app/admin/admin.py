@@ -40,7 +40,7 @@ class UtilityAdmin(RichTextModelView, model=Utility):
 
 
 class CodeAdmin(RichTextModelView, model=Code):
-    column_list = [Code.id, Code.title, Code.edition, Code.code_type_id, Code.code_amendments]
+    column_list = [Code.id, Code.title, Code.edition, Code.code_type_id, Code.code_name]
 
 
 class LabelAdmin(RichTextModelView, model=Label):
@@ -172,20 +172,25 @@ class FormulaAdmin(RichTextModelView, model=Formula):
 # -------------------------
 
 def setup_admin(app):
-    admin = Admin(
-        app,
-        engine,
-        title="Admin",
-        logo_url="https://res.cloudinary.com/dikq4mtrh/image/upload/v1762442702/illumine_logo_lmi7yw.png",
-    )
+    try:
+        admin = Admin(
+            app,
+            engine,
+            title="Admin",
+            logo_url="https://res.cloudinary.com/dikq4mtrh/image/upload/v1762442702/illumine_logo_lmi7yw.png",
+        )
 
-    admin.add_view(StateAdmin)
-    admin.add_view(AHJAdmin)
-    admin.add_view(UtilityAdmin)
-    admin.add_view(CodeAdmin)
-    admin.add_view(LabelAdmin)
-    admin.add_view(CodeTypeAdmin)
-    admin.add_view(CombinationMapperAdmin)
-
-    admin.add_view(NoteAdmin)
-    admin.add_view(FormulaAdmin)
+        admin.add_view(StateAdmin)
+        admin.add_view(AHJAdmin)
+        admin.add_view(UtilityAdmin)
+        admin.add_view(CodeAdmin)
+        admin.add_view(LabelAdmin)
+        admin.add_view(CodeTypeAdmin)
+        admin.add_view(CombinationMapperAdmin)
+        admin.add_view(NoteAdmin)
+        admin.add_view(FormulaAdmin)
+        print("✓ Admin panel initialized successfully")
+    except Exception as e:
+        print(f"ERROR setting up admin panel: {e}")
+        import traceback
+        traceback.print_exc()
