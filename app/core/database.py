@@ -38,9 +38,23 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    
-
-    Base.metadata.create_all(bind=engine)
+    """Initialize database: create all tables from models."""
+    try:
+        print("\n" + "="*70)
+        print("DATABASE INITIALIZATION")
+        print("="*70)
+        print(f"\n[*] Database URL: {DATABASE_URL}")
+        print(f"[*] Creating tables from models...")
+        
+        Base.metadata.create_all(bind=engine)
+        
+        print("✓ All tables created/verified successfully")
+        print("="*70 + "\n")
+    except Exception as e:
+        print(f"ERROR during database initialization: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 
 # Dependency for FastAPI routes

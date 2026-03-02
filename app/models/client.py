@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -20,3 +21,15 @@ class Client(Base):
     zip_code = Column(String(20), nullable=True)
     country_id = Column(Integer, ForeignKey("countries.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    state = relationship("State", back_populates="clients")
+    country = relationship("Country", back_populates="clients")
+    preferences = relationship("Preference", back_populates="client", uselist=False)
+
+    def __str__(self):
+        name = f"{self.first_name} {self.last_name}".strip() or self.company_name or f"Client {self.id}"
+        return name
+
+    def __repr__(self):
+        return f"<Client(id={self.id}, email='{self.email}', company='{self.company_name}')>"

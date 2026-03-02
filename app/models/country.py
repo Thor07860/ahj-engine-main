@@ -1,4 +1,6 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -8,6 +10,17 @@ class Country(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     iso2 = Column(String(2), nullable=False, unique=True)
-    iso3 = Column(String(3), nullable=False, unique=True)
+    iso3 = Column(String(3), nullable=True, unique=True)
     calling_code = Column(String(20), nullable=True)
     currency_code = Column(String(3), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships (using back_populates for bidirectional relationships)
+    states = relationship("State", back_populates="country")
+    clients = relationship("Client", back_populates="country")
+
+    def __str__(self):
+        return self.name or self.iso2
+
+    def __repr__(self):
+        return f"<Country(id={self.id}, name='{self.name}', iso2='{self.iso2}')>"

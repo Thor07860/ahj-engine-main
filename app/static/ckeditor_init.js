@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 document.addEventListener("DOMContentLoaded", function () {
     if (typeof CKEDITOR === "undefined") {
         return;
@@ -19,3 +20,26 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+=======
+document.addEventListener("DOMContentLoaded", function () {
+    if (typeof CKEDITOR === "undefined") {
+        return;
+    }
+
+    var textareas = document.querySelectorAll("textarea");
+
+    textareas.forEach(function (textarea) {
+        if (!textarea.id) {
+            textarea.id = "ck-editor-" + Math.random().toString(36).slice(2);
+        }
+
+        if (CKEDITOR.instances[textarea.id]) {
+            return;
+        }
+
+        CKEDITOR.replace(textarea.id, {
+            height: 350
+        });
+    });
+});
+>>>>>>> 143acc3fd81c11943810fcb3a8f4ec99f21425af

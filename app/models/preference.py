@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -15,3 +16,12 @@ class Preference(Base):
     notifications_enabled = Column(Boolean, nullable=False, server_default="1")
     theme = Column(String(50), nullable=True)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationship
+    client = relationship("Client", back_populates="preferences")
+
+    def __str__(self):
+        return f"Preferences for Client {self.client_id} ({self.language}, {self.timezone})"
+
+    def __repr__(self):
+        return f"<Preference(id={self.id}, client_id={self.client_id}, language='{self.language}')>"

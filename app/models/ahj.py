@@ -3,7 +3,6 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
-
 class AHJ(Base):
     __tablename__ = "ahjs"
 
@@ -21,11 +20,11 @@ class AHJ(Base):
     website = Column(String(500), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationship
-    state = relationship("State", backref="ahjs")
+    # Relationships
+    state = relationship("State", back_populates="ahjs")
 
     def __str__(self):
         return self.name or self.ahj_name or "AHJ"
-    
+
     def __repr__(self):
         return f"<AHJ(id={self.id}, name='{self.name or self.ahj_name}')>"

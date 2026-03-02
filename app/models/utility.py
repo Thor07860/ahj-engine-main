@@ -26,14 +26,10 @@ class Utility(Base):
 
     # Relationship
     ahj = relationship("AHJ", backref="utilities")
-    state = relationship("State", backref="utilities")
-
-    #def __str__(self):
-        #return self.utility_name
-    
+    state = relationship("State", back_populates="utilities")
 
     def __str__(self):
         return self.name or self.utility_name
-
+    
     def __repr__(self):
         return f"<Utility(id={self.id}, name='{self.name or self.utility_name}')>"
